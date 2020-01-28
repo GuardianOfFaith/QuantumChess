@@ -12,7 +12,7 @@ public class Socket : MonoBehaviour
     string host = "localhost";
     int port = 64242;
 
-    void Start()
+    void Awake()
     {
         instance = this;
         socket = new TcpClient(host, port);
@@ -25,31 +25,30 @@ public class Socket : MonoBehaviour
 
     public static Socket GetInstance() { return instance; }
 
-    static public string SendMessage(/*A passer UNITEE ET ETAT DU JEU*/)
+    static public string SendMessageQT(GameObject piece)
     {
         if (instance.isConnected())
         {
             NetworkStream stream = instance.socket.GetStream();
-            Byte[] bytes = new Byte[2048];
+            Byte[] bytes = new Byte[1024];
 
             string message = "";
 
-            //THERE MUS BE SOME TREATMENT
+            message += piece.GetComponent<Piece>().type.ToString();
 
             bytes = System.Text.Encoding.ASCII.GetBytes(message);
             stream.Write(bytes, 0, bytes.Length);
             Array.Clear(bytes, 0, bytes.Length);
-
             message = "";
-            int nb = 0;
-            do
+
+            for (int i = 0; i < 3; i++)
             {
-                nb = stream.Read(bytes, 0, bytes.Length);
-                if (nb > 0)
+                int j = stream.Read(bytes, 0, bytes.Length);
+                if (j > 0)
                     message += System.Text.Encoding.ASCII.GetString(bytes);
                 Array.Clear(bytes, 0, bytes.Length);
-            } while (nb == bytes.Length);
-
+            }
+            Debug.Log(message.Split(';').Length);
             return message;
         }
         else return null;

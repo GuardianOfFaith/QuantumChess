@@ -43,6 +43,9 @@ public class MoveSelector : MonoBehaviour
     private List<Vector2Int> moveLocations;
     private List<GameObject> locationHighlights;
 
+    bool quanticMode = false;
+    private Vector2Int qGridPoint;
+
     void Start ()
     {
         this.enabled = false;
@@ -53,6 +56,11 @@ public class MoveSelector : MonoBehaviour
 
     void Update ()
     {
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            quanticMode = !quanticMode;
+        }
+        Debug.Log("Mode Quantique : " + quanticMode);
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
         RaycastHit hit;
@@ -63,7 +71,7 @@ public class MoveSelector : MonoBehaviour
 
             tileHighlight.SetActive(true);
             tileHighlight.transform.position = Geometry.PointFromGrid(gridPoint);
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButtonDown(0) && !quanticMode)
             {
                 // Reference Point 2: check for valid move location
                 if (!moveLocations.Contains(gridPoint))
@@ -82,6 +90,34 @@ public class MoveSelector : MonoBehaviour
                 }
                 // Reference Point 3: capture enemy piece here later
                 ExitState();
+            }
+            if (Input.GetMouseButtonDown(0) && quanticMode)
+            {
+                if (GameManager.instance.PieceAtGrid(gridPoint) == null)
+                {
+                    if (qGridPoint == Vector2Int.zero)
+                    {
+                        // Reference Point 2: check for valid move location
+                        if (!moveLocations.Contains(gridPoint))
+                        {
+                            return;
+                        }
+                        qGridPoint = gridPoint;
+                    }
+                    else if (qGridPoint != gridPoint)
+                    {
+                        // Reference Point 2: check for valid move location
+                        if (!moveLocations.Contains(gridPoint))
+                        {
+                            return;
+                        }
+
+                        GameManager.instance.QuantumMove(movingPiece, qGridPoint, gridPoint);
+                                               
+                        // Reference Point 3: capture enemy piece here later
+                        ExitState();
+                    }
+                }
             }
         }
         else
@@ -130,6 +166,8 @@ public class MoveSelector : MonoBehaviour
             }
             locationHighlights.Add(highlight);
         }
+        quanticMode = false;
+        qGridPoint = Vector2Int.zero;
     }
 
     private void ExitState()

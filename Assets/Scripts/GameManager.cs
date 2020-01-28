@@ -63,8 +63,8 @@ public class GameManager : MonoBehaviour
     /// Quantum Part
     /// </summary>
     Socket socket;
-    int shots = 2048;
-    
+    int shots = 1024;
+
     void Awake()
     {
         instance = this;
@@ -128,6 +128,14 @@ public class GameManager : MonoBehaviour
         pieces[col, row] = pieceObject;
     }
 
+    public GameObject AddPieceQT(GameObject prefab, Player player, int col, int row)
+    {
+        GameObject pieceObject = board.AddPiece(prefab, col, row);
+        player.pieces.Add(pieceObject);
+        pieces[col, row] = pieceObject;
+        return pieceObject;
+    }
+
     public void SelectPieceAtGrid(Vector2Int gridPoint)
     {
         GameObject selectedPiece = pieces[gridPoint.x, gridPoint.y];
@@ -154,6 +162,15 @@ public class GameManager : MonoBehaviour
 
     public void Move(GameObject piece, Vector2Int gridPoint)
     {
+        if (piece.GetComponent<QuanticDouble>() != null)
+        {
+            GameObject copy = piece.GetComponent<QuanticDouble>().original;
+            Vector2Int quantumGridPoint = GridForPiece(copy);
+            pieces[quantumGridPoint.x, quantumGridPoint.y] = null;
+            Destroy(copy);
+            Destroy(piece.GetComponent<QuanticDouble>());
+        }
+
         Piece pieceComponent = piece.GetComponent<Piece>();
         if (pieceComponent.type == PieceType.Pawn && !HasPawnMoved(piece))
         {
@@ -164,6 +181,42 @@ public class GameManager : MonoBehaviour
         pieces[startGridPoint.x, startGridPoint.y] = null;
         pieces[gridPoint.x, gridPoint.y] = piece;
         board.MovePiece(piece, gridPoint);
+    }
+
+    public void QuantumMove(GameObject piece, Vector2Int gridPoint, Vector2Int gridPointDual)
+    {
+        GameObject copy;
+        if (piece.GetComponent<QuanticDouble>() != null)
+        {
+            copy = piece.GetComponent<QuanticDouble>().original;
+            Vector2Int quantumGridPoint = GridForPiece(copy);
+            pieces[quantumGridPoint.x, quantumGridPoint.y] = null;
+            Destroy(copy);
+            Destroy(piece.GetComponent<QuanticDouble>());
+        }
+
+        Piece pieceComponent = piece.GetComponent<Piece>();
+        if (pieceComponent.type == PieceType.Pawn && !HasPawnMoved(piece))
+        {
+            movedPawns.Add(piece);
+        }
+        copy = AddPieceQT(piece, currentPlayer, gridPointDual.x, gridPointDual.y);
+        board.MakeQuantumPiece(piece);
+        board.MakeQuantumPiece(copy);
+
+        QuanticDouble Qt1 = copy.AddComponent<QuanticDouble>();
+        QuanticDouble Qt2 = piece.AddComponent<QuanticDouble>();
+        Qt1.original = piece;
+        Qt2.original = copy;
+
+        Vector2Int startGridPoint = GridForPiece(piece);
+        pieces[startGridPoint.x, startGridPoint.y] = null;
+        pieces[gridPoint.x, gridPoint.y] = piece;
+        board.MovePiece(piece, gridPoint);
+
+        Vector2Int startGridPoint2 = GridForPiece(copy);
+        pieces[gridPointDual.x, gridPointDual.y] = copy;
+        board.MovePiece(copy, gridPointDual);
     }
 
     public void PawnMoved(GameObject pawn)
@@ -179,15 +232,55 @@ public class GameManager : MonoBehaviour
     public void CapturePieceAt(Vector2Int gridPoint)
     {
         GameObject pieceToCapture = PieceAtGrid(gridPoint);
-        if (pieceToCapture.GetComponent<Piece>().type == PieceType.King)
+
+        //QuantumCheck
+        if (pieceToCapture.GetComponent<QuanticDouble>() != null)
         {
-            Debug.Log(currentPlayer.name + " wins!");
-            Destroy(board.GetComponent<TileSelector>());
-            Destroy(board.GetComponent<MoveSelector>());
+            string responseQT = Socket.SendMessageQT(pieceToCapture);
+            string[] resp = responseQT.Split(';');
+            Debug.Log(resp[1] + ';'+ resp[3]);
+
+            //Piece is there
+            if (int.Parse(resp[1]) > int.Parse(resp[3]))
+            {
+                Debug.Log("WasThere");
+                if (pieceToCapture.GetComponent<Piece>().type == PieceType.King)
+                {
+                    Debug.Log(currentPlayer.name + " wins!");
+                    Destroy(board.GetComponent<TileSelector>());
+                    Destroy(board.GetComponent<MoveSelector>());
+                }
+                currentPlayer.capturedPieces.Add(pieceToCapture);
+
+                GameObject copy = pieceToCapture.GetComponent<QuanticDouble>().original;
+                Vector2Int quantumGridPoint = GridForPiece(copy);
+                pieces[quantumGridPoint.x, quantumGridPoint.y] = null;
+                Destroy(copy);
+                Destroy(pieceToCapture.GetComponent<QuanticDouble>());
+
+                pieces[gridPoint.x, gridPoint.y] = null;
+                Destroy(pieceToCapture);
+            }
+            else
+            {
+                board.RevertQuantumPiece(pieceToCapture.GetComponent<QuanticDouble>().original);
+                Destroy(pieceToCapture.GetComponent<QuanticDouble>().original.GetComponent<QuanticDouble>());
+
+                pieces[gridPoint.x, gridPoint.y] = null;
+                Destroy(pieceToCapture);
+            }
         }
-        currentPlayer.capturedPieces.Add(pieceToCapture);
-        pieces[gridPoint.x, gridPoint.y] = null;
-        Destroy(pieceToCapture);
+        else
+        {
+            if (pieceToCapture.GetComponent<Piece>().type == PieceType.King)
+            {
+                Debug.Log(currentPlayer.name + " wins!");
+                Destroy(board.GetComponent<TileSelector>());
+                Destroy(board.GetComponent<MoveSelector>());
+            }
+            pieces[gridPoint.x, gridPoint.y] = null;
+            Destroy(pieceToCapture);
+        }
     }
 
     public void SelectPiece(GameObject piece)

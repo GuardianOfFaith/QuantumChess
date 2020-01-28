@@ -34,6 +34,7 @@ public class Board : MonoBehaviour
 {
     public Material defaultMaterial;
     public Material selectedMaterial;
+    public Material quanticMaterial;
 
     public GameObject AddPiece(GameObject piece, int col, int row)
     {
@@ -59,6 +60,22 @@ public class Board : MonoBehaviour
     }
 
     public void DeselectPiece(GameObject piece)
+    {
+        MeshRenderer renderers = piece.GetComponentInChildren<MeshRenderer>();
+
+        //Pour que le pion puisse rester quantic ou redevenir classic
+        if (renderers.material.name.Contains(quanticMaterial.name))
+            renderers.material = quanticMaterial;
+        else
+            renderers.material = defaultMaterial;
+    }
+
+    public void MakeQuantumPiece(GameObject piece)
+    {
+        MeshRenderer renderers = piece.GetComponentInChildren<MeshRenderer>();
+        renderers.material = quanticMaterial;
+    }
+    public void RevertQuantumPiece(GameObject piece)
     {
         MeshRenderer renderers = piece.GetComponentInChildren<MeshRenderer>();
         renderers.material = defaultMaterial;
