@@ -48,7 +48,8 @@ public class Socket : MonoBehaviour
                     message += System.Text.Encoding.ASCII.GetString(bytes);
                 Array.Clear(bytes, 0, bytes.Length);
             }
-            Debug.Log(message.Split(';').Length);
+            if (message.Contains("!"))
+                message = message.Trim('!');
             return message;
         }
         else return null;

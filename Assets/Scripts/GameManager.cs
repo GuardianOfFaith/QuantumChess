@@ -191,8 +191,8 @@ public class GameManager : MonoBehaviour
             copy = piece.GetComponent<QuanticDouble>().original;
             Vector2Int quantumGridPoint = GridForPiece(copy);
             pieces[quantumGridPoint.x, quantumGridPoint.y] = null;
+
             Destroy(copy);
-            Destroy(piece.GetComponent<QuanticDouble>());
         }
 
         Piece pieceComponent = piece.GetComponent<Piece>();
@@ -204,8 +204,16 @@ public class GameManager : MonoBehaviour
         board.MakeQuantumPiece(piece);
         board.MakeQuantumPiece(copy);
 
-        QuanticDouble Qt1 = copy.AddComponent<QuanticDouble>();
-        QuanticDouble Qt2 = piece.AddComponent<QuanticDouble>();
+        QuanticDouble Qt1; 
+        if (copy.GetComponent<QuanticDouble>() != null)
+            Qt1 = copy.GetComponent<QuanticDouble>();
+        else
+            Qt1 = copy.AddComponent<QuanticDouble>();
+        QuanticDouble Qt2;
+        if (piece.GetComponent<QuanticDouble>() != null)
+            Qt2 = piece.GetComponent<QuanticDouble>();
+        else
+            Qt2 = piece.AddComponent<QuanticDouble>();
         Qt1.original = piece;
         Qt2.original = copy;
 
