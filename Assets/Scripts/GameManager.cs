@@ -262,7 +262,7 @@ public class GameManager : MonoBehaviour
                 Debug.Log("WasThere");
                 if (pieceToCapture.GetComponent<Piece>().type == PieceType.King)
                 {
-                    Debug.Log(currentPlayer.name + " wins!");
+                    Win(currentPlayer);
                     Destroy(board.GetComponent<TileSelector>());
                     Destroy(board.GetComponent<MoveSelector>());
                 }
@@ -290,7 +290,7 @@ public class GameManager : MonoBehaviour
         {
             if (pieceToCapture.GetComponent<Piece>().type == PieceType.King)
             {
-                Debug.Log(currentPlayer.name + " wins!");
+                Win(currentPlayer);
                 Destroy(board.GetComponent<TileSelector>());
                 Destroy(board.GetComponent<MoveSelector>());
             }
