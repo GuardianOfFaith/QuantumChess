@@ -65,6 +65,11 @@ public class GameManager : MonoBehaviour
     Socket socket;
     int shots = 1024;
 
+    //Interface
+    public UnityEngine.UI.Image connection;
+    public GameObject panel;
+    public UnityEngine.UI.Text winnerDisplay;
+
     void Awake()
     {
         instance = this;
@@ -87,7 +92,10 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        Debug.Log(socket.isConnected());
+        if (socket.isConnected())
+            connection.color = Color.green;
+        else
+            connection.color = Color.red;
     }
 
     private void InitialSetup()
@@ -352,5 +360,20 @@ public class GameManager : MonoBehaviour
         Player tempPlayer = currentPlayer;
         currentPlayer = otherPlayer;
         otherPlayer = tempPlayer;
+    }
+
+    public void Win(Player winner)
+    {
+        panel.SetActive(true);
+        winnerDisplay.text = currentPlayer.name + " wins!";
+    }
+
+    public void reload()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+    }
+    public void quit()
+    {
+        Application.Quit();
     }
 }

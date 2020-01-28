@@ -46,6 +46,9 @@ public class MoveSelector : MonoBehaviour
     bool quanticMode = false;
     private Vector2Int qGridPoint;
 
+    //QUANTUM
+    public GameObject quantumMode;
+
     void Start ()
     {
         this.enabled = false;
@@ -124,6 +127,7 @@ public class MoveSelector : MonoBehaviour
         {
             tileHighlight.SetActive(false);
         }
+        quantumMode.SetActive(quanticMode);
     }
 
     private void CancelMove()
